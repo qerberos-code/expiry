@@ -351,6 +351,14 @@
                     <strong>Date:</strong> ${data.date}<br>
                     <strong>Total:</strong> ${data.total}
                 </div>
+                ${data.ocr_text ? `
+                <div style="margin-bottom: 15px;">
+                    <strong>OCR Text:</strong><br>
+                    <div style="background: #f5f5f5; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; max-height: 100px; overflow-y: auto;">
+                        ${data.ocr_text.replace(/\n/g, '<br>')}
+                    </div>
+                </div>
+                ` : ''}
                 <div>
                     <strong>Items Found:</strong>
             `;

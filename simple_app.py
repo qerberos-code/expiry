@@ -254,7 +254,16 @@ def process_receipt():
         
         print(f"Image saved to: {image_path}")
         
-        # For now, return mock data - in production you'd use OCR
+        # Try to extract text using OCR
+        try:
+            import pytesseract
+            ocr_text = pytesseract.image_to_string(Image.open(io.BytesIO(image_bytes)))
+            print(f"OCR extracted text: {ocr_text[:100]}...")
+        except Exception as e:
+            print(f"OCR failed: {e}")
+            ocr_text = "OCR not available"
+        
+        # For now, return mock data with OCR text - in production you'd parse OCR results
         mock_receipt_data = {
             'is_receipt': True,
             'vendor': 'Safeway',
@@ -262,6 +271,7 @@ def process_receipt():
             'total': '$45.67',
             'image_path': f"receipts/{filename}",
             'image_id': image_id,
+            'ocr_text': ocr_text,
             'items': [
                 {'name': 'Organic Milk', 'price': 4.99, 'expiration_days': 7},
                 {'name': 'Whole Wheat Bread', 'price': 2.49, 'expiration_days': 5},
