@@ -34,10 +34,15 @@
             {% block content %}{% endblock %}
         </main>
 
-        <!-- Floating Action Button -->
-        <a href="{{ url_for('add_item') }}" class="floating-btn">
-            <i class="fas fa-plus"></i>
-        </a>
+        <!-- Floating Action Buttons -->
+        <div class="floating-buttons">
+            <a href="{{ url_for('camera_capture') }}" class="floating-btn camera-btn">
+                <i class="fas fa-camera"></i>
+            </a>
+            <a href="{{ url_for('add_item') }}" class="floating-btn">
+                <i class="fas fa-plus"></i>
+            </a>
+        </div>
 
         <!-- Bottom Actions (when needed) -->
         {% block bottom_actions %}{% endblock %}
@@ -68,6 +73,10 @@
                 <a href="{{ url_for('add_item') }}" class="menu-item">
                     <i class="fas fa-plus"></i>
                     <span>Add Item</span>
+                </a>
+                <a href="{{ url_for('camera_capture') }}" class="menu-item">
+                    <i class="fas fa-camera"></i>
+                    <span>Scan Receipt</span>
                 </a>
             </nav>
         </div>

@@ -215,12 +215,18 @@ body {
     gap: 10px;
 }
 
-/* Floating action button */
-.floating-btn {
+/* Floating action buttons */
+.floating-buttons {
     position: fixed;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
+    display: flex;
+    gap: 15px;
+    z-index: 1000;
+}
+
+.floating-btn {
     width: 60px;
     height: 60px;
     background-color: var(--accent-yellow-green);
@@ -232,12 +238,17 @@ body {
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     transition: all 0.3s ease;
-    z-index: 1000;
+    text-decoration: none;
 }
 
 .floating-btn:hover {
-    transform: translateX(-50%) scale(1.1);
+    transform: scale(1.1);
     box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+
+.floating-btn.camera-btn {
+    background-color: var(--accent-blue);
+    border-color: var(--header-dark-green);
 }
 
 .floating-btn i {

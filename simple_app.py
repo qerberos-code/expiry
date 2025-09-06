@@ -8,6 +8,10 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, f
 from flask_migrate import Migrate
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+import base64
+import io
+from PIL import Image
+import json
 
 # Load environment variables
 load_dotenv()
@@ -206,6 +210,90 @@ def analytics():
         })
     except Exception as e:
         return jsonify({'error': str(e)})
+
+@app.route('/camera')
+def camera_capture():
+    """Camera capture page for receipt scanning"""
+    return render_template('camera_capture.html')
+
+@app.route('/process_receipt', methods=['POST'])
+def process_receipt():
+    """Process receipt image from camera"""
+    try:
+        data = request.get_json()
+        if not data or 'image' not in data:
+            return jsonify({'error': 'No image data provided'}), 400
+        
+        # Extract base64 image data
+        image_data = data['image']
+        if image_data.startswith('data:image'):
+            image_data = image_data.split(',')[1]
+        
+        # Decode and process image
+        image_bytes = base64.b64decode(image_data)
+        
+        # For now, return mock data - in production you'd use OCR
+        mock_receipt_data = {
+            'is_receipt': True,
+            'vendor': 'Safeway',
+            'date': datetime.now().strftime('%Y-%m-%d'),
+            'total': '$45.67',
+            'items': [
+                {'name': 'Organic Milk', 'price': 4.99, 'expiration_days': 7},
+                {'name': 'Whole Wheat Bread', 'price': 2.49, 'expiration_days': 5},
+                {'name': 'Free Range Eggs', 'price': 5.99, 'expiration_days': 14},
+                {'name': 'Greek Yogurt', 'price': 3.99, 'expiration_days': 10},
+                {'name': 'Fresh Spinach', 'price': 2.99, 'expiration_days': 3}
+            ]
+        }
+        
+        return jsonify(mock_receipt_data)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/save_receipt_items', methods=['POST'])
+def save_receipt_items():
+    """Save extracted receipt items to database"""
+    if not DATABASE_AVAILABLE:
+        return jsonify({'error': 'Database not available'}), 500
+    
+    try:
+        data = request.get_json()
+        items = data.get('items', [])
+        
+        saved_items = []
+        for item_data in items:
+            # Calculate expiration date
+            expiration_date = datetime.now().date() + timedelta(days=item_data.get('expiration_days', 7))
+            
+            # Create new item
+            item = Item(
+                receipt_id=f"REC-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
+                product_name=item_data['name'],
+                purchase_date=datetime.now().date(),
+                expiration_date=expiration_date,
+                price=item_data['price']
+            )
+            
+            db.session.add(item)
+            saved_items.append({
+                'name': item.product_name,
+                'expiration_date': expiration_date.strftime('%Y-%m-%d'),
+                'price': item.price
+            })
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'saved_items': saved_items,
+            'message': f'Successfully saved {len(saved_items)} items'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @app.errorhandler(500)
 def internal_error(error):

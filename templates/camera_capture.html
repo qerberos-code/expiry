@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📷 Receipt Scanner - Expiry Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
+    <style>
+        .camera-container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .camera-preview {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            background: #f0f0f0;
+            border: 2px dashed #4CAF50;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .camera-preview video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .camera-preview canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .camera-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .btn-camera {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-camera:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+        
+        .btn-camera:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .processing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .processing-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 300px;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .receipt-preview {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .receipt-item:last-child {
+            border-bottom: none;
+        }
+        
+        .item-name {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .item-price {
+            color: #4CAF50;
+            font-weight: 600;
+        }
+        
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #c62828;
+        }
+        
+        .success-message {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #2e7d32;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <header class="mobile-header">
+            <a href="{{ url_for('index') }}" class="back-btn">← Back</a>
+            <h1>📷 Receipt Scanner</h1>
+            <div class="header-spacer"></div>
+        </header>
+
+        <div class="camera-container">
+            <div class="camera-preview" id="cameraPreview">
+                <div id="cameraPlaceholder">
+                    <div style="text-align: center; color: #666;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">📷</div>
+                        <div>Camera Preview</div>
+                        <div style="font-size: 14px; margin-top: 5px;">Click "Start Camera" to begin</div>
+                    </div>
+                </div>
+                <video id="video" autoplay style="display: none;"></video>
+                <canvas id="canvas" style="display: none;"></canvas>
+            </div>
+
+            <div class="camera-controls">
+                <button id="startCamera" class="btn-camera">
+                    📹 Start Camera
+                </button>
+                <button id="capturePhoto" class="btn-camera" disabled>
+                    📸 Capture
+                </button>
+                <button id="retakePhoto" class="btn-camera btn-secondary hidden">
+                    🔄 Retake
+                </button>
+            </div>
+
+            <div id="errorMessage" class="error-message hidden"></div>
+            <div id="successMessage" class="success-message hidden"></div>
+
+            <div id="receiptPreview" class="receipt-preview hidden">
+                <h3>📄 Receipt Preview</h3>
+                <div id="receiptData"></div>
+                <div style="margin-top: 20px;">
+                    <button id="saveReceipt" class="btn-camera">
+                        💾 Save Items
+                    </button>
+                    <button id="discardReceipt" class="btn-camera btn-secondary">
+                        🗑️ Discard
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="processing-overlay" id="processingOverlay">
+            <div class="processing-content">
+                <div class="spinner"></div>
+                <h3>Processing Receipt...</h3>
+                <p>Please wait while we extract the data from your receipt.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let stream = null;
+        let capturedImage = null;
+        let receiptData = null;
+
+        const startCameraBtn = document.getElementById('startCamera');
+        const capturePhotoBtn = document.getElementById('capturePhoto');
+        const retakePhotoBtn = document.getElementById('retakePhoto');
+        const saveReceiptBtn = document.getElementById('saveReceipt');
+        const discardReceiptBtn = document.getElementById('discardReceipt');
+        
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const cameraPreview = document.getElementById('cameraPreview');
+        const cameraPlaceholder = document.getElementById('cameraPlaceholder');
+        const receiptPreview = document.getElementById('receiptPreview');
+        const processingOverlay = document.getElementById('processingOverlay');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+
+        startCameraBtn.addEventListener('click', startCamera);
+        capturePhotoBtn.addEventListener('click', capturePhoto);
+        retakePhotoBtn.addEventListener('click', retakePhoto);
+        saveReceiptBtn.addEventListener('click', saveReceipt);
+        discardReceiptBtn.addEventListener('click', discardReceipt);
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment', // Use back camera
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                });
+                
+                video.srcObject = stream;
+                video.style.display = 'block';
+                cameraPlaceholder.style.display = 'none';
+                
+                startCameraBtn.disabled = true;
+                capturePhotoBtn.disabled = false;
+                
+                hideMessages();
+            } catch (error) {
+                showError('Camera access denied or not available. Please check your permissions.');
+                console.error('Camera error:', error);
+            }
+        }
+
+        function capturePhoto() {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            context.drawImage(video, 0, 0);
+            
+            capturedImage = canvas.toDataURL('image/jpeg', 0.8);
+            
+            // Stop camera
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            
+            video.style.display = 'none';
+            canvas.style.display = 'block';
+            
+            capturePhotoBtn.disabled = true;
+            retakePhotoBtn.classList.remove('hidden');
+            
+            // Process the image
+            processReceipt(capturedImage);
+        }
+
+        function retakePhoto() {
+            canvas.style.display = 'none';
+            cameraPlaceholder.style.display = 'block';
+            retakePhotoBtn.classList.add('hidden');
+            receiptPreview.classList.add('hidden');
+            startCameraBtn.disabled = false;
+            capturedImage = null;
+            receiptData = null;
+            hideMessages();
+        }
+
+        async function processReceipt(imageData) {
+            showProcessing(true);
+            
+            try {
+                const response = await fetch('/process_receipt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ image: imageData })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.is_receipt) {
+                    receiptData = data;
+                    displayReceiptData(data);
+                    showSuccess('Receipt processed successfully!');
+                } else {
+                    showError('Could not process receipt. Please try again with a clearer image.');
+                }
+            } catch (error) {
+                showError('Error processing receipt. Please try again.');
+                console.error('Processing error:', error);
+            } finally {
+                showProcessing(false);
+            }
+        }
+
+        function displayReceiptData(data) {
+            const receiptDataDiv = document.getElementById('receiptData');
+            
+            let html = `
+                <div style="margin-bottom: 15px;">
+                    <strong>Store:</strong> ${data.vendor}<br>
+                    <strong>Date:</strong> ${data.date}<br>
+                    <strong>Total:</strong> ${data.total}
+                </div>
+                <div>
+                    <strong>Items Found:</strong>
+            `;
+            
+            data.items.forEach(item => {
+                html += `
+                    <div class="receipt-item">
+                        <span class="item-name">${item.name}</span>
+                        <span class="item-price">$${item.price}</span>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            receiptDataDiv.innerHTML = html;
+            receiptPreview.classList.remove('hidden');
+        }
+
+        async function saveReceipt() {
+            if (!receiptData) return;
+            
+            showProcessing(true);
+            
+            try {
+                const response = await fetch('/save_receipt_items', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ items: receiptData.items })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showSuccess(`Successfully saved ${data.saved_items.length} items!`);
+                    
+                    // Redirect to main page after a delay
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    showError(data.error || 'Error saving items. Please try again.');
+                }
+            } catch (error) {
+                showError('Error saving items. Please try again.');
+                console.error('Save error:', error);
+            } finally {
+                showProcessing(false);
+            }
+        }
+
+        function discardReceipt() {
+            receiptPreview.classList.add('hidden');
+            retakePhoto();
+        }
+
+        function showProcessing(show) {
+            processingOverlay.style.display = show ? 'flex' : 'none';
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('hidden');
+            successMessage.classList.add('hidden');
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.classList.remove('hidden');
+            errorMessage.classList.add('hidden');
+        }
+
+        function hideMessages() {
+            errorMessage.classList.add('hidden');
+            successMessage.classList.add('hidden');
+        }
+
+        // Clean up camera stream when page is unloaded
+        window.addEventListener('beforeunload', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>
