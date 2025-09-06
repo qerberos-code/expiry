@@ -1,90 +1,102 @@
 from flask import Flask, request, jsonify
 from pymongo import MongoClient
 from bson import ObjectId
-import json
 from datetime import datetime
+from pydantic import BaseModel, ValidationError
+from typing import List, Optional
 
 app = Flask(__name__)
 
 # MongoDB connection
-client = MongoClient('mongodb://localhost:27017/')
-db = client['flask_nosql_db']
-collection = db['data_collection']
+client = MongoClient("mongodb://localhost:27017/")
+db = client["expiry"]
+receipts_collection = db["receipts"]
+items_collection = db["items"]
 
-# Custom JSON encoder to handle ObjectId
-class JSONEncoder(json.JSONEncoder):
-    def default(self, o):
-        if isinstance(o, ObjectId):
-            return str(o)
-        return json.JSONEncoder.default(self, o)
 
-app.json_encoder = JSONEncoder
+# --- Pydantic Models for Validation ---
+class ItemModel(BaseModel):
+    productName: str
+    price: float
+    # These fields are optional in the input JSON
+    expirationDate: Optional[datetime] = None
 
-@app.route('/store', methods=['POST'])
-def store_data():
+
+class ReceiptModel(BaseModel):
+    storeName: str
+    purchaseDate: datetime
+    totalAmount: float
+    items: List[ItemModel] = []
+
+
+@app.route("/receipts", methods=["POST"])
+def create_receipt():
     """
-    Endpoint to store JSON data in the NoSQL database
-    Expects JSON payload in the request body
-    """
-    try:
-        # TODO: Add receipt items through this.
-
-        # Get JSON data from request
-        data = request.get_json()
-        
-        if not data:
-            return jsonify({'error': 'No JSON data provided'}), 400
-        
-        # Add timestamp to the data
-        data['timestamp'] = datetime.utcnow()
-        
-        # Insert data into MongoDB
-        result = collection.insert_one(data)
-        
-        return jsonify({
-            'message': 'Data stored successfully',
-            'id': str(result.inserted_id)
-        }), 201
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/data', methods=['GET'])
-def get_all_data():
-    """
-    Endpoint to retrieve all data from the NoSQL database
-    Returns all receipts in the collection
+    Endpoint to store a new receipt with its items.
+    The incoming JSON is validated against the Pydantic models.
     """
     try:
-        # Retrieve all receipts from the collection
-        receipts = list(collection.find())
-        
-        # Convert ObjectId to string for JSON serialization
-        for doc in receipts:
-            doc['_id'] = str(doc['_id'])
-            if 'timestamp' in doc:
-                doc['timestamp'] = doc['timestamp'].isoformat()
-        
-        return jsonify({
-            'count': len(receipts),
-            'data': receipts
-        }), 200
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # 1. Validate incoming JSON against our Pydantic model
+        receipt_data = ReceiptModel(**request.get_json())
 
-@app.route('/', methods=['GET'])
+    except ValidationError as e:
+        # If validation fails, return a 400 error with details
+        return (
+            jsonify({"error": "Invalid data provided", "details": e.errors()}),
+            400,
+        )
+
+    try:
+        # 2. Insert the valid receipt data
+        receipt_to_insert = {
+            "storeName": receipt_data.storeName,
+            "purchaseDate": receipt_data.purchaseDate,
+            "totalAmount": receipt_data.totalAmount,
+        }
+        result = receipts_collection.insert_one(receipt_to_insert)
+        receipt_id = result.inserted_id
+
+        # 3. Prepare and insert the associated items
+        items_to_insert = []
+        if receipt_data.items:
+            for item in receipt_data.items:
+                item_doc = item.dict()
+                item_doc["receiptId"] = receipt_id
+                # Always use the receipt's purchase date for the item
+                item_doc["purchaseDate"] = receipt_data.purchaseDate
+                items_to_insert.append(item_doc)
+
+            if items_to_insert:
+                items_collection.insert_many(items_to_insert)
+
+        return (
+            jsonify(
+                {
+                    "message": "Receipt and items stored successfully",
+                    "receiptId": str(receipt_id),
+                }
+            ),
+            201,
+        )
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/", methods=["GET"])
 def health_check():
     """
     Basic health check endpoint
     """
-    return jsonify({
-        'message': 'Flask NoSQL API is running',
-        'endpoints': {
-            'POST /store': 'Store JSON data',
-            'GET /data': 'Retrieve all data'
+    return jsonify(
+        {
+            "message": "Expiry Tracker API is running",
+            "endpoints": {
+                "POST /receipts": "Store a new receipt and its items"
+            },
         }
-    })
+    )
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=5000)
