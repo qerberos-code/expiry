@@ -237,12 +237,12 @@ def process_receipt():
         image_id = str(uuid.uuid4())
         filename = f"receipt_{image_id}.jpg"
         
-        # Ensure uploads directory exists
-        upload_dir = os.path.join(app.root_path, 'uploads', 'receipts')
-        os.makedirs(upload_dir, exist_ok=True)
+        # Ensure receipts directory exists
+        receipts_dir = os.path.join(app.root_path, 'receipts')
+        os.makedirs(receipts_dir, exist_ok=True)
         
         # Save image to disk
-        image_path = os.path.join(upload_dir, filename)
+        image_path = os.path.join(receipts_dir, filename)
         
         # Process and save image with PIL
         with Image.open(io.BytesIO(image_bytes)) as img:
@@ -260,7 +260,7 @@ def process_receipt():
             'vendor': 'Safeway',
             'date': datetime.now().strftime('%Y-%m-%d'),
             'total': '$45.67',
-            'image_path': f"uploads/receipts/{filename}",
+            'image_path': f"receipts/{filename}",
             'image_id': image_id,
             'items': [
                 {'name': 'Organic Milk', 'price': 4.99, 'expiration_days': 7},
@@ -276,12 +276,12 @@ def process_receipt():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/uploads/receipts/<filename>')
+@app.route('/receipts/<filename>')
 def serve_receipt_image(filename):
     """Serve uploaded receipt images"""
     try:
-        upload_dir = os.path.join(app.root_path, 'uploads', 'receipts')
-        image_path = os.path.join(upload_dir, filename)
+        receipts_dir = os.path.join(app.root_path, 'receipts')
+        image_path = os.path.join(receipts_dir, filename)
         
         if os.path.exists(image_path):
             from flask import send_file
