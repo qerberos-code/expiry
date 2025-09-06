@@ -182,6 +182,7 @@ receipt_database.db
 receipts/
 scanned_receipts/
 images/
+uploads/
 *.jpg
 *.jpeg
 *.png

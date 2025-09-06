@@ -12,6 +12,7 @@ import base64
 import io
 from PIL import Image
 import json
+import uuid
 
 # Load environment variables
 load_dotenv()
@@ -232,12 +233,35 @@ def process_receipt():
         # Decode and process image
         image_bytes = base64.b64decode(image_data)
         
+        # Generate unique filename
+        image_id = str(uuid.uuid4())
+        filename = f"receipt_{image_id}.jpg"
+        
+        # Ensure uploads directory exists
+        upload_dir = os.path.join(app.root_path, 'uploads', 'receipts')
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Save image to disk
+        image_path = os.path.join(upload_dir, filename)
+        
+        # Process and save image with PIL
+        with Image.open(io.BytesIO(image_bytes)) as img:
+            # Convert to RGB if needed
+            if img.mode != 'RGB':
+                img = img.convert('RGB')
+            # Save as JPEG
+            img.save(image_path, 'JPEG', quality=85, optimize=True)
+        
+        print(f"Image saved to: {image_path}")
+        
         # For now, return mock data - in production you'd use OCR
         mock_receipt_data = {
             'is_receipt': True,
             'vendor': 'Safeway',
             'date': datetime.now().strftime('%Y-%m-%d'),
             'total': '$45.67',
+            'image_path': f"uploads/receipts/{filename}",
+            'image_id': image_id,
             'items': [
                 {'name': 'Organic Milk', 'price': 4.99, 'expiration_days': 7},
                 {'name': 'Whole Wheat Bread', 'price': 2.49, 'expiration_days': 5},
@@ -249,6 +273,21 @@ def process_receipt():
         
         return jsonify(mock_receipt_data)
         
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/uploads/receipts/<filename>')
+def serve_receipt_image(filename):
+    """Serve uploaded receipt images"""
+    try:
+        upload_dir = os.path.join(app.root_path, 'uploads', 'receipts')
+        image_path = os.path.join(upload_dir, filename)
+        
+        if os.path.exists(image_path):
+            from flask import send_file
+            return send_file(image_path, mimetype='image/jpeg')
+        else:
+            return jsonify({'error': 'Image not found'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
