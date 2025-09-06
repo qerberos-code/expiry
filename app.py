@@ -11,12 +11,12 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key-change-this')
 
-# PostgreSQL configuration
+# Database configuration with fallback
 database_url = os.getenv('DATABASE_URL')
 if not database_url:
-    # Fallback for development
-    database_url = 'postgresql://localhost/expiry_db'
-    print("Warning: DATABASE_URL not set, using fallback")
+    # Use SQLite for development/testing
+    database_url = 'sqlite:///expiry.db'
+    print("Using SQLite database for local development")
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

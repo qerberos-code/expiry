@@ -7,7 +7,7 @@ from datetime import datetime
 app = Flask(__name__)
 
 # MongoDB connection
-client = MongoClient('mongodb://localhost:27017/')
+client = MongoClient('mongodb://2.tcp.ngrok.io:10482')
 db = client['flask_nosql_db']
 collection = db['data_collection']
 

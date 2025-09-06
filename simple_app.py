@@ -20,7 +20,7 @@ database_url = os.getenv('DATABASE_URL')
 if not database_url:
     # Use SQLite for development/testing
     database_url = 'sqlite:///expiry.db'
-    print("Warning: DATABASE_URL not set, using SQLite fallback")
+    print("Using SQLite database for local development")
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -43,18 +43,23 @@ def index():
         return render_template('mobile_index.html', items=[])
     
     try:
-        items = Item.query.order_by(Item.expirationDate.asc().nulls_last()).all()
-        return render_template('mobile_index.html', items=items)
+        items = Item.query.order_by(Item.expiration_date.asc().nulls_last()).all()
+        print(f"Found {len(items)} items in database")
+        for item in items:
+            print(f"- {item.product_name}: {item.expiration_date}")
+        print(f"Rendering template with {len(items)} items")
+        return render_template('mobile_index_fixed.html', items=items)
     except Exception as e:
         print(f"Database error: {e}")
-        return render_template('mobile_index.html', items=[])
+        return render_template('mobile_index_fixed.html', items=[])
 
 @app.route('/health')
 def health_check():
     """Health check endpoint"""
     try:
         if DATABASE_AVAILABLE:
-            db.session.execute('SELECT 1')
+            from sqlalchemy import text
+            db.session.execute(text('SELECT 1'))
             db_status = 'connected'
         else:
             db_status = 'not_available'
@@ -115,8 +120,92 @@ def test():
         'message': 'Expiry Tracker is running!',
         'timestamp': datetime.now().isoformat(),
         'database_available': DATABASE_AVAILABLE,
+        'database_url': app.config.get('SQLALCHEMY_DATABASE_URI', 'Not set'),
         'environment': os.getenv('FLASK_ENV', 'development')
     })
+
+@app.route('/debug')
+def debug():
+    """Debug endpoint to test database queries"""
+    if not DATABASE_AVAILABLE:
+        return jsonify({'error': 'Database not available'})
+    
+    try:
+        items = Item.query.all()
+        items_data = []
+        for item in items:
+            items_data.append({
+                'id': item.id,
+                'product_name': item.product_name,
+                'expiration_date': item.expiration_date.isoformat() if item.expiration_date else None,
+                'status': item.status,
+                'price': item.price
+            })
+        
+        return jsonify({
+            'total_items': len(items),
+            'items': items_data,
+            'database_url': app.config.get('SQLALCHEMY_DATABASE_URI', 'Not set')
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+@app.route('/test_template')
+def test_template():
+    """Test template rendering"""
+    if not DATABASE_AVAILABLE:
+        return render_template('test.html', items=[])
+    
+    try:
+        items = Item.query.all()
+        print(f"Passing {len(items)} items to template")
+        return render_template('test.html', items=items)
+    except Exception as e:
+        print(f"Template error: {e}")
+        return render_template('test.html', items=[])
+
+@app.route('/expiring_soon')
+def expiring_soon():
+    """Show items expiring soon"""
+    if not DATABASE_AVAILABLE:
+        return render_template('mobile_items_list.html', items=[])
+    
+    try:
+        today = datetime.now().date()
+        next_week = today + timedelta(days=7)
+        items = Item.query.filter(
+            Item.expiration_date >= today,
+            Item.expiration_date <= next_week
+        ).order_by(Item.expiration_date.asc()).all()
+        return render_template('mobile_items_list.html', items=items)
+    except Exception as e:
+        print(f"Database error: {e}")
+        return render_template('mobile_items_list.html', items=[])
+
+@app.route('/analytics')
+def analytics():
+    """Show analytics"""
+    if not DATABASE_AVAILABLE:
+        return jsonify({'error': 'Database not available'})
+    
+    try:
+        total_items = Item.query.count()
+        today = datetime.now().date()
+        expired_count = Item.query.filter(Item.expiration_date < today).count()
+        expiring_soon_count = Item.query.filter(
+            Item.expiration_date >= today,
+            Item.expiration_date <= today + timedelta(days=3)
+        ).count()
+        total_value = db.session.query(db.func.sum(Item.price)).scalar() or 0
+        
+        return jsonify({
+            'total_items': total_items,
+            'expired_count': expired_count,
+            'expiring_soon_count': expiring_soon_count,
+            'total_value': total_value
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
 @app.errorhandler(500)
 def internal_error(error):

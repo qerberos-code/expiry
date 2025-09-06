@@ -81,7 +81,7 @@
     <div class="card-content">
         <div>
             <div class="card-name">Produce</div>
-            <div class="card-details">{{ items|selectattr('product_name', 'match', '.*[Aa]pple.*|.*[Bb]anana.*|.*[Ll]ettuce.*|.*[Tt]omato.*')|list|length }} items</div>
+            <div class="card-details">{{ items|selectattr('product_name', 'search', 'apple')|list|length + items|selectattr('product_name', 'search', 'banana')|list|length + items|selectattr('product_name', 'search', 'lettuce')|list|length + items|selectattr('product_name', 'search', 'tomato')|list|length }} items</div>
         </div>
     </div>
 </div>
@@ -93,7 +93,7 @@
     <div class="card-content">
         <div>
             <div class="card-name">Meats</div>
-            <div class="card-details">{{ items|selectattr('product_name', 'match', '.*[Cc]hicken.*|.*[Bb]eef.*|.*[Pp]ork.*|.*[Ff]ish.*')|list|length }} items</div>
+            <div class="card-details">{{ items|selectattr('product_name', 'search', 'chicken')|list|length + items|selectattr('product_name', 'search', 'beef')|list|length + items|selectattr('product_name', 'search', 'pork')|list|length + items|selectattr('product_name', 'search', 'fish')|list|length }} items</div>
         </div>
     </div>
 </div>
@@ -105,7 +105,7 @@
     <div class="card-content">
         <div>
             <div class="card-name">Dairy</div>
-            <div class="card-details">{{ items|selectattr('product_name', 'match', '.*[Mm]ilk.*|.*[Cc]heese.*|.*[Yy]ogurt.*|.*[Bb]utter.*')|list|length }} items</div>
+            <div class="card-details">{{ items|selectattr('product_name', 'search', 'milk')|list|length + items|selectattr('product_name', 'search', 'cheese')|list|length + items|selectattr('product_name', 'search', 'yogurt')|list|length + items|selectattr('product_name', 'search', 'butter')|list|length }} items</div>
         </div>
     </div>
 </div>
@@ -117,7 +117,7 @@
     <div class="card-content">
         <div>
             <div class="card-name">Bakery</div>
-            <div class="card-details">{{ items|selectattr('product_name', 'match', '.*[Bb]read.*|.*[Cc]ake.*|.*[Mm]uffin.*|.*[Pp]astry.*')|list|length }} items</div>
+            <div class="card-details">{{ items|selectattr('product_name', 'search', 'bread')|list|length + items|selectattr('product_name', 'search', 'cake')|list|length + items|selectattr('product_name', 'search', 'muffin')|list|length + items|selectattr('product_name', 'search', 'pastry')|list|length }} items</div>
         </div>
     </div>
 </div>
@@ -126,6 +126,7 @@
 <div class="section-header" style="margin-top: 30px;">
     <h2 class="section-title">Quick Stats:</h2>
 </div>
+
 
 <div class="item-card yellow">
     <div class="card-icon">
