@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Item - Expiry Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-edit"></i> Edit Item</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="productName" class="form-label">Product Name *</label>
+                                <input type="text" class="form-control" id="productName" name="productName" value="{{ item.product_name }}" required>
+                                <div class="form-text">Enter the name of the product</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="price" class="form-label">Price *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="price" name="price" step="0.01" min="0" value="{{ item.price }}" required>
+                                </div>
+                                <div class="form-text">Enter the purchase price</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="purchaseDate" class="form-label">Purchase Date *</label>
+                                <input type="date" class="form-control" id="purchaseDate" name="purchaseDate" value="{{ item.purchase_date.strftime('%Y-%m-%d') if item.purchase_date else '' }}" required>
+                                <div class="form-text">When did you buy this item?</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="expirationDate" class="form-label">Expiration Date</label>
+                                <input type="date" class="form-control" id="expirationDate" name="expirationDate" value="{{ item.expiration_date.strftime('%Y-%m-%d') if item.expiration_date else '' }}">
+                                <div class="form-text">When does this item expire? (optional)</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="receiptId" class="form-label">Receipt ID</label>
+                        <input type="text" class="form-control" id="receiptId" name="receiptId" value="{{ item.receipt_id or '' }}" placeholder="e.g., REC-2024-001">
+                        <div class="form-text">Optional receipt identifier for tracking</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Item
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

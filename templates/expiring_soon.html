@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Expiring Soon - Expiry Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-exclamation-triangle"></i> Items Expiring Soon</h1>
+            <a href="{{ url_for('add_item') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Item
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-clock"></i> Items Expiring Within 7 Days</h5>
+            </div>
+            <div class="card-body">
+                {% if items %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Purchase Date</th>
+                                <th>Expiration Date</th>
+                                <th>Days Until Expiration</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                            <tr class="{% if item.status == 'expired' %}table-danger{% elif item.status == 'expiring_soon' %}table-warning{% elif item.status == 'expiring_this_week' %}table-info{% endif %}">
+                                <td>
+                                    <strong>{{ item.product_name }}</strong>
+                                    {% if item.receipt_id %}
+                                    <br><small class="text-muted">Receipt: {{ item.receipt_id }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.purchase_date.strftime('%Y-%m-%d') if item.purchase_date else 'N/A' }}</td>
+                                <td>{{ item.expiration_date.strftime('%Y-%m-%d') if item.expiration_date else 'No expiration' }}</td>
+                                <td>
+                                    {% if item.days_until_expiration is not none %}
+                                        {% if item.days_until_expiration < 0 %}
+                                            <span class="badge bg-danger">{{ item.days_until_expiration }} days ago</span>
+                                        {% elif item.days_until_expiration == 0 %}
+                                            <span class="badge bg-danger">Today!</span>
+                                        {% elif item.days_until_expiration <= 3 %}
+                                            <span class="badge bg-warning">{{ item.days_until_expiration }} days</span>
+                                        {% elif item.days_until_expiration <= 7 %}
+                                            <span class="badge bg-info">{{ item.days_until_expiration }} days</span>
+                                        {% else %}
+                                            <span class="badge bg-success">{{ item.days_until_expiration }} days</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-secondary">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>${{ "%.2f"|format(item.price) }}</td>
+                                <td>
+                                    {% if item.status == 'expired' %}
+                                        <span class="badge bg-danger">Expired</span>
+                                    {% elif item.status == 'expiring_soon' %}
+                                        <span class="badge bg-warning">Expiring Soon</span>
+                                    {% elif item.status == 'expiring_this_week' %}
+                                        <span class="badge bg-info">This Week</span>
+                                    {% elif item.status == 'fresh' %}
+                                        <span class="badge bg-success">Fresh</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No Expiration</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{{ url_for('edit_item', item_id=item.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteItem('{{ item.id }}', '{{ item.product_name }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h4 class="text-success">Great news!</h4>
+                    <p class="text-muted">No items are expiring within the next 7 days.</p>
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">
+                        <i class="fas fa-home"></i> Back to Dashboard
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete <strong id="itemName"></strong>?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function deleteItem(itemId, itemName) {
+    document.getElementById('itemName').textContent = itemName;
+    document.getElementById('deleteForm').action = '{{ url_for("delete_item", item_id="") }}' + itemId;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+</script>
+{% endblock %}

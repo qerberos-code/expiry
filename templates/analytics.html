@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - Expiry Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><i class="fas fa-chart-bar"></i> Analytics</h1>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                <i class="fas fa-home"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Analytics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ analytics.total_items }}</h4>
+                        <p class="card-text">Total Items</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-box fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ analytics.expiring_soon_count }}</h4>
+                        <p class="card-text">Expiring Soon (≤3 days)</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">{{ analytics.expired_count }}</h4>
+                        <p class="card-text">Expired Items</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-times-circle fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">${{ "%.2f"|format(analytics.total_value) }}</h4>
+                        <p class="card-text">Total Value</p>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-dollar-sign fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional Analytics -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Item Status Distribution</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h3 class="text-success">{{ analytics.total_items - analytics.expired_count - analytics.expiring_soon_count }}</h3>
+                            <p class="text-muted mb-0">Fresh Items</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-warning">{{ analytics.expiring_soon_count }}</h3>
+                        <p class="text-muted mb-0">Expiring Soon</p>
+                    </div>
+                </div>
+                <hr>
+                <div class="row text-center">
+                    <div class="col-6">
+                        <div class="border-end">
+                            <h3 class="text-danger">{{ analytics.expired_count }}</h3>
+                            <p class="text-muted mb-0">Expired</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <h3 class="text-primary">{{ analytics.total_items }}</h3>
+                        <p class="text-muted mb-0">Total Items</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('expiring_soon') }}" class="btn btn-warning">
+                        <i class="fas fa-exclamation-triangle"></i> View Expiring Soon
+                    </a>
+                    <a href="{{ url_for('add_item') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add New Item
+                    </a>
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                        <i class="fas fa-list"></i> View All Items
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tips Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Tips for Better Food Management</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <i class="fas fa-fridge fa-2x text-primary mb-2"></i>
+                            <h6>First In, First Out</h6>
+                            <p class="small text-muted">Use older items before newer ones to reduce waste.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <i class="fas fa-calendar-check fa-2x text-success mb-2"></i>
+                            <h6>Check Regularly</h6>
+                            <p class="small text-muted">Review your items weekly to catch expiring products.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <i class="fas fa-shopping-cart fa-2x text-info mb-2"></i>
+                            <h6>Plan Purchases</h6>
+                            <p class="small text-muted">Buy only what you need to avoid overstocking.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
