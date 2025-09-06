@@ -1,34 +1,57 @@
-# app.py
+# extract_grocery_items.py
+"""
+Grocery Receipt Reader
+----------------------
+Reads a grocery receipt image and extracts:
+- Items (abbreviations → inferred full names)
+- Purchase date (falls back to user input if not found)
+- Estimated shelf life & expiration dates
+- Final total cost
+
+Requires:
+    pip install google-generativeai
+"""
+
 import os
 import imghdr
 import re
-import json
-from typing import List, Dict, Any
-
-from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.responses import JSONResponse
-
 import google.generativeai as genai
 
-# -----------------------------
-# Config
-# -----------------------------
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-if not GEMINI_API_KEY:
-    raise RuntimeError("Missing GEMINI_API_KEY environment variable.")
-genai.configure(api_key=GEMINI_API_KEY)
-
-MODEL_NAME = "gemini-1.5-flash"
-
-app = FastAPI(title="Receipt Reader API")
+try:
+    from google.colab import files
+except ImportError:
+    files = None
 
 # -----------------------------
-# Prompt (same as your spec)
+# Configure API key
 # -----------------------------
-PROMPT = """
+API_KEY = os.getenv("GEMINI_API_KEY")
+if not API_KEY:
+    raise RuntimeError("Missing GEMINI_API_KEY. Set it as an environment variable.")
+genai.configure(api_key=API_KEY)
+
+# -----------------------------
+# Upload receipt image
+# -----------------------------
+if files:
+    uploaded = files.upload()
+    image_path = next(iter(uploaded.keys()))
+else:
+    raise RuntimeError("This script is designed to run in Google Colab for file upload.")
+
+mime = imghdr.what(image_path)
+mime_type = f"image/{mime}" if mime in ("jpeg", "png", "webp", "heic", "heif") else "image/jpeg"
+
+askDate = input("What is the date of purchase? (MM/DD/YYYY) ")
+
+# -----------------------------
+# Model setup
+# -----------------------------
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+PROMPT = f"""
 System / Instruction prompt
 You are a grocery receipt reader. You will be given one image of a grocery receipt. Your tasks are:
-
 
 1. Extract the item line names exactly as abbreviated on the receipt.
 2. Capture the final total cost.
@@ -38,141 +61,40 @@ You are a grocery receipt reader. You will be given one image of a grocery recei
    - If the item is perishable (e.g., fresh produce, meat, dairy), estimate a reasonable number of days until it expires.
 6. Add the shelf life to the purchase date to determine the expiration date for each item.
 
-
-What to extract
-- Item names only — keep the original abbreviations exactly as printed (e.g., IMPOSS BURG, BNLS CHICK BREAST).
-- Total cost — capture the final amount due: prefer the line labeled TOTAL, AMOUNT DUE, or BALANCE DUE. If multiple totals exist (e.g., subtotal, tax, total), pick the final amount after tax. Ignore “CHANGE”, “CASH BACK”, payment tenders, or running balances.
-- Create a list of the original abbreviations exactly as printed (List A).
-- Purchase date from the receipt.
-- Expiration date for each item based on estimated shelf life.
-
-
-What to ignore
-- Store name/address, cashier, terminal, barcodes.
-- Subtotals, tax lines, discounts/coupons/rebates, voids, refunds, payment lines, loyalty info.
-- Any line that is not a purchasable item’s name.
-
-
-OCR hygiene
-- Normalize whitespace (single spaces), preserve ASCII punctuation as-is, and strip leading/trailing spaces.
-- Keep original capitalization in the abbreviated list (do not title-case or expand abbreviations).
-- If an item name is split across two wrapped lines, merge into one name exactly as it would read (no added punctuation).
-- If no valid total is found, output NOT FOUND.
-- Duplicate handling: If the same item name appears multiple times, repeat it for each occurrence.
-
-
-Output format
-
-
-Return a structured list for each item including:
-
-
-- Full Name
-- Estimated Shelf Life
-- Expiration Date
-
-
-Format:
-
-
-*<Full item name> | Purchase Date: <MM/DD/YYYY> | Shelf Life: <X days or unlimited> | Expiration Date: <MM/DD/YYYY or unlimited>
-
-
-Rules
-- Each item line begins with * immediately followed by the information (no extra spaces before/after).
-- The last line must be *TOTAL: ... (e.g., *TOTAL: $53.27).
-- Keep the order of items the same as on the receipt.
-
-
-Few-shot example
-
-
-Example 1 (input image contains lines like):
-KROGER #141
-BNLS CHICK BREAST   2.15 lb @ 4.99/lb     10.73
-IMPOSS BURG         2 @ 5.99               11.98
-ROMA TOMATO         0.80 lb @ 1.29/lb       1.03
-SUBTOTAL                                    23.74
-TAX                                         1.78
-TOTAL                                       $25.52
-VISA TEND                                   $25.52
-DATE: 03/15/2025
-
-
-Output:
-
-
-*Boneless Chicken Breast | Purchase Date: 03/15/2025 | Shelf Life: 7 days | Expiration Date: 03/22/2025
-*Impossible Burger | Purchase Date: 03/15/2025 | Shelf Life: 30 days | Expiration Date: 04/14/2025
-*Roma Tomato | Purchase Date: 03/15/2025 | Shelf Life: 5 days | Expiration Date: 03/20/2025
-*TOTAL: $25.52
-
+Important:
+- If no purchase date is detected in the receipt, substitute with the provided fallback date: {askDate}.
+- Make sure every item line includes a purchase date (never leave it blank).
 """
 
 # -----------------------------
-# Helper: parse model output
+# Run model
 # -----------------------------
-def parse_output(raw_text: str) -> Dict[str, Any]:
-    lines = [ln.strip() for ln in raw_text.splitlines() if ln.strip()]
-    star_lines = [ln for ln in lines if ln.startswith("*")]
+with open(image_path, "rb") as f:
+    image_bytes = f.read()
 
-    item_re = re.compile(
-        r'^\*\s*(?P<full_name>.*?)\s*\|\s*Purchase Date:\s*(?P<purchase_date>(?:\d{2}/\d{2}/\d{4}|NOT FOUND))\s*\|\s*Shelf Life:\s*(?P<shelf_life>[^|]+)\s*\|\s*Expiration Date:\s*(?P<expiration_date>.+?)\s*$',
-        re.IGNORECASE,
-    )
-    total_re = re.compile(r'^\*\s*TOTAL:\s*(?P<amount>\$?\s*\d+(?:\.\d{2})?)\s*$', re.IGNORECASE)
-
-    items, total_amount = [], None
-    for ln in star_lines:
-        m_item = item_re.match(ln)
-        if m_item:
-            items.append(
-                {
-                    "full_name": m_item.group("full_name").strip(),
-                    "purchase_date": m_item.group("purchase_date").strip(),
-                    "shelf_life": m_item.group("shelf_life").strip(),
-                    "expiration_date": m_item.group("expiration_date").strip(),
-                    "raw": ln,
-                }
-            )
-            continue
-        m_total = total_re.match(ln)
-        if m_total:
-            total_amount = m_total.group("amount").replace(" ", "")
-
-    return {
-        "raw_output": star_lines,
-        "items": [
-            {
-                "full_name": i["full_name"],
-                "purchase_date": i["purchase_date"],
-                "shelf_life": i["shelf_life"],
-                "expiration_date": i["expiration_date"],
-            }
-            for i in items
-        ],
-        "total": total_amount if total_amount else "NOT FOUND",
-    }
+resp = model.generate_content(
+    [
+        {"mime_type": mime_type, "data": image_bytes},
+        PROMPT,
+    ]
+)
 
 # -----------------------------
-# API endpoint
+# Parse + display
 # -----------------------------
-@app.post("/process-receipt")
-async def process_receipt(file: UploadFile = File(...)):
-    # validate mime
-    mime = imghdr.what(file.file)
-    mime_type = f"image/{mime}" if mime in ("jpeg","png","webp","heic","heif") else "image/jpeg"
-    image_bytes = await file.read()
+text = (resp.text or "").strip()
+lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
 
-    try:
-        model = genai.GenerativeModel(MODEL_NAME)
-        resp = model.generate_content(
-            [
-                {"mime_type": mime_type, "data": image_bytes},
-                PROMPT,
-            ]
-        )
-        text = (getattr(resp, "text", "") or "").strip()
-        return JSONResponse(parse_output(text))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# Replace "NOT FOUND" with fallback date
+updated_lines = []
+date_pattern = re.compile(r"Purchase Date:\s*NOT FOUND", re.IGNORECASE)
+for ln in lines:
+    if date_pattern.search(ln):
+        ln = date_pattern.sub(f"Purchase Date: {askDate}", ln)
+    updated_lines.append(ln)
+
+food_items = [ln[1:].strip() if ln.startswith("*") else ln for ln in updated_lines]
+
+print("List of Food Items:")
+for item in food_items:
+    print("-", item)
