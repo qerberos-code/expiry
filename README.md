@@ -154,3 +154,4 @@ Copy `.env.template` to `.env` and configure:
 ## Support
 
 For questions or issues, please [create an issue](link-to-issues) or contact [your-email].
+# Force deployment update Sat Sep  6 13:15:13 EDT 2025
