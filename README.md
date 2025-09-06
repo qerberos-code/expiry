@@ -154,4 +154,4 @@ Copy `.env.template` to `.env` and configure:
 ## Support
 
 For questions or issues, please [create an issue](link-to-issues) or contact [your-email].
-# Force deployment update Sat Sep  6 14:58:00 EDT 2025 - Fixed WSGI configuration
+# Force deployment update Sat Sep  6 15:17:00 EDT 2025 - Created wsgi.py and fixed Python version
