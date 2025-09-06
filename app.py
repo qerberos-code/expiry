@@ -12,7 +12,13 @@ app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key-change-this')
 
 # PostgreSQL configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://localhost/expiry_db')
+database_url = os.getenv('DATABASE_URL')
+if not database_url:
+    # Fallback for development
+    database_url = 'postgresql://localhost/expiry_db'
+    print("Warning: DATABASE_URL not set, using fallback")
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database
@@ -151,5 +157,41 @@ def analytics():
     
     return render_template('analytics.html', analytics=analytics_data)
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint for Render"""
+    try:
+        # Test database connection
+        db.session.execute('SELECT 1')
+        return jsonify({
+            'status': 'healthy',
+            'database': 'connected',
+            'timestamp': datetime.now().isoformat()
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'database': 'disconnected',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@app.errorhandler(500)
+def internal_error(error):
+    """Handle 500 errors gracefully"""
+    db.session.rollback()
+    return render_template('error.html', 
+                         error_code=500,
+                         error_message="Internal server error. Please try again later."), 500
+
+@app.errorhandler(404)
+def not_found_error(error):
+    """Handle 404 errors"""
+    return render_template('error.html',
+                         error_code=404,
+                         error_message="Page not found."), 404
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.getenv('PORT', 5000))
+    debug = os.getenv('FLASK_ENV') != 'production'
+    app.run(debug=debug, host='0.0.0.0', port=port)
