@@ -1,0 +1,176 @@
+{% extends "mobile_base.html" %}
+
+{% block header_title %}
+    Add Item
+{% endblock %}
+
+{% block content %}
+<form method="POST" class="mobile-form">
+    <div class="form-group">
+        <label class="form-label">Product Name</label>
+        <input type="text" class="form-input" name="productName" placeholder="Enter product name" required>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">Price</label>
+        <input type="number" class="form-input" name="price" step="0.01" min="0" placeholder="0.00" required>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">Purchase Date</label>
+        <input type="date" class="form-input" name="purchaseDate" required>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">Expiration Date (Optional)</label>
+        <input type="date" class="form-input" name="expirationDate">
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">Receipt ID (Optional)</label>
+        <input type="text" class="form-input" name="receiptId" placeholder="e.g., REC-2024-001">
+    </div>
+</form>
+
+<!-- Quick Add Examples -->
+<div class="section-header" style="margin-top: 20px;">
+    <h2 class="section-title">Quick Add:</h2>
+</div>
+
+<div class="item-card orange" onclick="fillExample('Milk', 3.99, 7)">
+    <div class="card-icon">
+        <i class="fas fa-milk"></i>
+    </div>
+    <div class="card-content">
+        <div>
+            <div class="card-name">Milk (7 days)</div>
+            <div class="card-details">Tap to add</div>
+        </div>
+    </div>
+</div>
+
+<div class="item-card pink" onclick="fillExample('Bread', 2.49, 5)">
+    <div class="card-icon">
+        <i class="fas fa-bread-slice"></i>
+    </div>
+    <div class="card-content">
+        <div>
+            <div class="card-name">Bread (5 days)</div>
+            <div class="card-details">Tap to add</div>
+        </div>
+    </div>
+</div>
+
+<div class="item-card teal" onclick="fillExample('Eggs', 4.99, 14)">
+    <div class="card-icon">
+        <i class="fas fa-egg"></i>
+    </div>
+    <div class="card-content">
+        <div>
+            <div class="card-name">Eggs (14 days)</div>
+            <div class="card-details">Tap to add</div>
+        </div>
+    </div>
+</div>
+
+<div class="item-card lime" onclick="fillExample('Chicken', 8.99, 3)">
+    <div class="card-icon">
+        <i class="fas fa-drumstick-bite"></i>
+    </div>
+    <div class="card-content">
+        <div>
+            <div class="card-name">Chicken (3 days)</div>
+            <div class="card-details">Tap to add</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block bottom_actions %}
+<div class="bottom-actions">
+    <button class="bottom-btn" onclick="history.back()">Cancel</button>
+    <button class="bottom-btn primary" onclick="submitForm()">Save</button>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Set today's date as default purchase date
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date().toISOString().split('T')[0];
+    document.querySelector('input[name="purchaseDate"]').value = today;
+});
+
+function fillExample(productName, price, daysToExpire) {
+    document.querySelector('input[name="productName"]').value = productName;
+    document.querySelector('input[name="price"]').value = price;
+    
+    // Set expiration date based on days from today
+    const today = new Date();
+    const expirationDate = new Date(today.getTime() + (daysToExpire * 24 * 60 * 60 * 1000));
+    document.querySelector('input[name="expirationDate"]').valueAsDate = expirationDate;
+    
+    // Scroll to top to show filled form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function submitForm() {
+    const form = document.querySelector('form');
+    if (form.checkValidity()) {
+        form.submit();
+    } else {
+        // Show validation errors
+        form.reportValidity();
+    }
+}
+
+// Add touch feedback to quick add cards
+document.addEventListener('DOMContentLoaded', function() {
+    const quickAddCards = document.querySelectorAll('.item-card[onclick]');
+    quickAddCards.forEach(card => {
+        card.addEventListener('touchstart', function() {
+            this.style.transform = 'scale(0.98)';
+        });
+        
+        card.addEventListener('touchend', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+});
+
+// Auto-fill expiration date based on product name
+document.querySelector('input[name="productName"]').addEventListener('blur', function() {
+    const productName = this.value.toLowerCase();
+    const purchaseDate = document.querySelector('input[name="purchaseDate"]').value;
+    const expirationDateInput = document.querySelector('input[name="expirationDate"]');
+    
+    if (purchaseDate && !expirationDateInput.value) {
+        const productExpirationMap = {
+            'milk': 7,
+            'bread': 5,
+            'eggs': 14,
+            'cheese': 10,
+            'yogurt': 7,
+            'butter': 14,
+            'chicken': 3,
+            'beef': 3,
+            'fish': 2,
+            'lettuce': 7,
+            'tomatoes': 5,
+            'bananas': 5,
+            'apples': 14,
+            'oranges': 14
+        };
+        
+        for (const [product, days] of Object.entries(productExpirationMap)) {
+            if (productName.includes(product)) {
+                const purchaseDateObj = new Date(purchaseDate);
+                const expirationDateObj = new Date(purchaseDateObj.getTime() + (days * 24 * 60 * 60 * 1000));
+                expirationDateInput.value = expirationDateObj.toISOString().split('T')[0];
+                break;
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

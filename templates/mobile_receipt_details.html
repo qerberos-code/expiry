@@ -1,0 +1,138 @@
+{% extends "mobile_base.html" %}
+
+{% block header_title %}
+    Receipt Details
+{% endblock %}
+
+{% block content %}
+<!-- Receipt Image Placeholder -->
+<div class="receipt-image">
+    <i class="fas fa-image fa-3x" style="color: #ccc;"></i>
+    <p style="margin-top: 10px; color: #999;">Scanned/Uploaded Image</p>
+</div>
+
+<!-- Items Section -->
+<div class="section-header">
+    <h2 class="section-title">Items</h2>
+</div>
+
+<!-- Items List -->
+<div class="category-section">
+    {% for item in items %}
+    <div class="item-card {{ ['orange', 'pink', 'teal', 'lime', 'yellow', 'pink'][loop.index0 % 6] }}">
+        <div class="card-icon">
+            <i class="fas fa-tag"></i>
+        </div>
+        <div class="card-content">
+            <div>
+                <div class="card-name"># {{ item.product_name }}</div>
+                <div class="card-details">
+                    {% if item.expiration_date %}
+                        Expires: {{ item.expiration_date.strftime('%m/%d/%Y') }}
+                    {% else %}
+                        No expiration date
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-actions">
+                <span class="card-details">${{ "%.2f"|format(item.price) }}</span>
+                <div style="margin-left: 10px;">
+                    <button class="action-btn" onclick="editItem({{ item.id }})">Edit</button>
+                    <button class="action-btn" onclick="removeItem({{ item.id }})">Remove</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    {% if items|length == 0 %}
+    <div class="item-card orange">
+        <div class="card-icon">
+            <i class="fas fa-plus"></i>
+        </div>
+        <div class="card-content">
+            <div>
+                <div class="card-name">No items in this receipt</div>
+                <div class="card-details">Add items to get started</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Receipt Summary -->
+{% if items|length > 0 %}
+<div class="mobile-form">
+    <div class="form-group">
+        <label class="form-label">Receipt Total</label>
+        <div class="card-details" style="font-size: 18px; font-weight: 600;">
+            ${{ "%.2f"|format(items|sum(attribute='price')) }}
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">Items Count</label>
+        <div class="card-details" style="font-size: 16px;">
+            {{ items|length }} items
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label class="form-label">Purchase Date</label>
+        <div class="card-details" style="font-size: 16px;">
+            {% if items[0].purchase_date %}
+                {{ items[0].purchase_date.strftime('%B %d, %Y') }}
+            {% else %}
+                Not specified
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block bottom_actions %}
+<div class="bottom-actions">
+    <button class="bottom-btn" onclick="history.back()">Cancel</button>
+    <button class="bottom-btn primary" onclick="saveReceipt()">Save</button>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function editItem(itemId) {
+    window.location.href = '/edit_item/' + itemId;
+}
+
+function removeItem(itemId) {
+    if (confirm('Are you sure you want to remove this item?')) {
+        // Create a form to submit the delete request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/delete_item/' + itemId;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function saveReceipt() {
+    // For now, just go back to dashboard
+    // In a real app, this would save receipt data
+    window.location.href = '/';
+}
+
+// Add touch feedback to action buttons
+document.addEventListener('DOMContentLoaded', function() {
+    const actionBtns = document.querySelectorAll('.action-btn');
+    actionBtns.forEach(btn => {
+        btn.addEventListener('touchstart', function() {
+            this.style.backgroundColor = 'rgba(45, 80, 22, 0.1)';
+        });
+        
+        btn.addEventListener('touchend', function() {
+            this.style.backgroundColor = 'transparent';
+        });
+    });
+});
+</script>
+{% endblock %}

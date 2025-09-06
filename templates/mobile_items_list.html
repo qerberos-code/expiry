@@ -1,0 +1,243 @@
+{% extends "mobile_base.html" %}
+
+{% block header_title %}
+    Items List
+{% endblock %}
+
+{% block content %}
+<!-- Produce Section -->
+<div class="category-section">
+    <div class="section-header">
+        <h2 class="section-title">Produce</h2>
+        <a href="#" class="see-all-link">See All</a>
+    </div>
+    
+    <div class="category-items">
+        {% set produce_items = items|selectattr('product_name', 'match', '.*[Aa]pple.*|.*[Bb]anana.*|.*[Ll]ettuce.*|.*[Tt]omato.*|.*[Cc]arrot.*|.*[Oo]nion.*|.*[Pp]epper.*|.*[Cc]ucumber.*|.*[Ss]pinach.*|.*[Bb]roccoli.*')|list %}
+        {% for item in produce_items[:5] %}
+        <div class="item-card teal">
+            <div class="card-icon">
+                <i class="fas fa-apple-alt"></i>
+            </div>
+            <div class="card-content">
+                <div>
+                    <div class="card-name">{{ item.product_name }}</div>
+                    <div class="card-details">
+                        {% if item.expiration_date %}
+                            Expires: {{ item.expiration_date.strftime('%m/%d') }}
+                        {% else %}
+                            No expiration
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <span class="card-details">${{ "%.2f"|format(item.price) }}</span>
+                    <span class="status-badge {{ item.status.replace('_', '-') }}">
+                        {% if item.status == 'expired' %}
+                            Expired
+                        {% elif item.status == 'expiring_soon' %}
+                            Soon
+                        {% elif item.status == 'expiring_this_week' %}
+                            This Week
+                        {% else %}
+                            Fresh
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% if produce_items|length == 0 %}
+        <div class="item-card teal">
+            <div class="card-icon">
+                <i class="fas fa-apple-alt"></i>
+            </div>
+            <div class="card-content">
+                <div>
+                    <div class="card-name">No produce items</div>
+                    <div class="card-details">Add some fruits and vegetables</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Meats Section -->
+<div class="category-section">
+    <div class="section-header">
+        <h2 class="section-title">Meats</h2>
+        <a href="#" class="see-all-link">See All</a>
+    </div>
+    
+    <div class="category-items">
+        {% set meat_items = items|selectattr('product_name', 'match', '.*[Cc]hicken.*|.*[Bb]eef.*|.*[Pp]ork.*|.*[Ff]ish.*|.*[Tt]urkey.*|.*[Ll]amb.*|.*[Ss]teak.*|.*[Bb]acon.*')|list %}
+        {% for item in meat_items[:4] %}
+        <div class="item-card orange">
+            <div class="card-icon">
+                <i class="fas fa-drumstick-bite"></i>
+            </div>
+            <div class="card-content">
+                <div>
+                    <div class="card-name">{{ item.product_name }}</div>
+                    <div class="card-details">
+                        {% if item.expiration_date %}
+                            Expires: {{ item.expiration_date.strftime('%m/%d') }}
+                        {% else %}
+                            No expiration
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <span class="card-details">${{ "%.2f"|format(item.price) }}</span>
+                    <span class="status-badge {{ item.status.replace('_', '-') }}">
+                        {% if item.status == 'expired' %}
+                            Expired
+                        {% elif item.status == 'expiring_soon' %}
+                            Soon
+                        {% elif item.status == 'expiring_this_week' %}
+                            This Week
+                        {% else %}
+                            Fresh
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% if meat_items|length == 0 %}
+        <div class="item-card orange">
+            <div class="card-icon">
+                <i class="fas fa-drumstick-bite"></i>
+            </div>
+            <div class="card-content">
+                <div>
+                    <div class="card-name">No meat items</div>
+                    <div class="card-details">Add some protein</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Dairy Section -->
+<div class="category-section">
+    <div class="section-header">
+        <h2 class="section-title">Dairy</h2>
+        <a href="#" class="see-all-link">See All</a>
+    </div>
+    
+    <div class="category-items">
+        {% set dairy_items = items|selectattr('product_name', 'match', '.*[Mm]ilk.*|.*[Cc]heese.*|.*[Yy]ogurt.*|.*[Bb]utter.*|.*[Cc]ream.*|.*[Ee]ggs.*|.*[Ii]ce.*[Cc]ream.*')|list %}
+        {% for item in dairy_items[:2] %}
+        <div class="item-card pink">
+            <div class="card-icon">
+                <i class="fas fa-cheese"></i>
+            </div>
+            <div class="card-content">
+                <div>
+                    <div class="card-name">{{ item.product_name }}</div>
+                    <div class="card-details">
+                        {% if item.expiration_date %}
+                            Expires: {{ item.expiration_date.strftime('%m/%d') }}
+                        {% else %}
+                            No expiration
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <span class="card-details">${{ "%.2f"|format(item.price) }}</span>
+                    <span class="status-badge {{ item.status.replace('_', '-') }}">
+                        {% if item.status == 'expired' %}
+                            Expired
+                        {% elif item.status == 'expiring_soon' %}
+                            Soon
+                        {% elif item.status == 'expiring_this_week' %}
+                            This Week
+                        {% else %}
+                            Fresh
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% if dairy_items|length == 0 %}
+        <div class="item-card pink">
+            <div class="card-icon">
+                <i class="fas fa-cheese"></i>
+            </div>
+            <div class="card-content">
+                <div>
+                    <div class="card-name">No dairy items</div>
+                    <div class="card-details">Add some dairy products</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Other Items Section -->
+<div class="category-section">
+    <div class="section-header">
+        <h2 class="section-title">Other Items</h2>
+        <a href="#" class="see-all-link">See All</a>
+    </div>
+    
+    <div class="category-items">
+        {% set other_items = items|rejectattr('product_name', 'match', '.*[Aa]pple.*|.*[Bb]anana.*|.*[Ll]ettuce.*|.*[Tt]omato.*|.*[Cc]arrot.*|.*[Oo]nion.*|.*[Pp]epper.*|.*[Cc]ucumber.*|.*[Ss]pinach.*|.*[Bb]roccoli.*|.*[Cc]hicken.*|.*[Bb]eef.*|.*[Pp]ork.*|.*[Ff]ish.*|.*[Tt]urkey.*|.*[Ll]amb.*|.*[Ss]teak.*|.*[Bb]acon.*|.*[Mm]ilk.*|.*[Cc]heese.*|.*[Yy]ogurt.*|.*[Bb]utter.*|.*[Cc]ream.*|.*[Ee]ggs.*|.*[Ii]ce.*[Cc]ream.*')|list %}
+        {% for item in other_items[:3] %}
+        <div class="item-card lime">
+            <div class="card-icon">
+                <i class="fas fa-box"></i>
+            </div>
+            <div class="card-content">
+                <div>
+                    <div class="card-name">{{ item.product_name }}</div>
+                    <div class="card-details">
+                        {% if item.expiration_date %}
+                            Expires: {{ item.expiration_date.strftime('%m/%d') }}
+                        {% else %}
+                            No expiration
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <span class="card-details">${{ "%.2f"|format(item.price) }}</span>
+                    <span class="status-badge {{ item.status.replace('_', '-') }}">
+                        {% if item.status == 'expired' %}
+                            Expired
+                        {% elif item.status == 'expiring_soon' %}
+                            Soon
+                        {% elif item.status == 'expiring_this_week' %}
+                            This Week
+                        {% else %}
+                            Fresh
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% if other_items|length == 0 %}
+        <div class="item-card lime">
+            <div class="card-icon">
+                <i class="fas fa-box"></i>
+            </div>
+            <div class="card-content">
+                <div>
+                    <div class="card-name">No other items</div>
+                    <div class="card-details">All items are categorized</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

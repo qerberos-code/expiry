@@ -1,0 +1,153 @@
+{% extends "mobile_base.html" %}
+
+{% block header_title %}
+    <span class="greeting">Hello,</span> User!
+{% endblock %}
+
+{% block content %}
+<!-- Upcoming Section -->
+<div class="section-header">
+    <h2 class="section-title">Upcoming:</h2>
+    <a href="{{ url_for('expiring_soon') }}" class="see-all-link">See All</a>
+</div>
+
+<!-- Upcoming Items Cards -->
+{% for item in items[:4] %}
+<div class="item-card {{ ['orange', 'pink', 'teal', 'lime'][loop.index0 % 4] }}">
+    <div class="card-icon">
+        {% if item.status == 'expired' %}
+            <i class="fas fa-times"></i>
+        {% elif item.status == 'expiring_soon' %}
+            <i class="fas fa-exclamation-triangle"></i>
+        {% elif item.status == 'expiring_this_week' %}
+            <i class="fas fa-clock"></i>
+        {% else %}
+            <i class="fas fa-check"></i>
+        {% endif %}
+    </div>
+    <div class="card-content">
+        <div>
+            <div class="card-name">{{ item.product_name }}</div>
+            <div class="card-details">
+                {% if item.expiration_date %}
+                    Expires: {{ item.expiration_date.strftime('%m/%d') }}
+                {% else %}
+                    No expiration date
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-actions">
+            <span class="status-badge {{ item.status.replace('_', '-') }}">
+                {% if item.status == 'expired' %}
+                    Expired
+                {% elif item.status == 'expiring_soon' %}
+                    Soon
+                {% elif item.status == 'expiring_this_week' %}
+                    This Week
+                {% else %}
+                    Fresh
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% if items|length == 0 %}
+<div class="item-card orange">
+    <div class="card-icon">
+        <i class="fas fa-plus"></i>
+    </div>
+    <div class="card-content">
+        <div>
+            <div class="card-name">No items yet</div>
+            <div class="card-details">Add your first item to get started</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Categories Section -->
+<div class="section-header" style="margin-top: 30px;">
+    <h2 class="section-title">Categories:</h2>
+    <a href="{{ url_for('analytics') }}" class="see-all-link">See All</a>
+</div>
+
+<!-- Category Cards -->
+<div class="item-card pink">
+    <div class="card-icon">
+        <i class="fas fa-apple-alt"></i>
+    </div>
+    <div class="card-content">
+        <div>
+            <div class="card-name">Produce</div>
+            <div class="card-details">{{ items|selectattr('product_name', 'match', '.*[Aa]pple.*|.*[Bb]anana.*|.*[Ll]ettuce.*|.*[Tt]omato.*')|list|length }} items</div>
+        </div>
+    </div>
+</div>
+
+<div class="item-card orange">
+    <div class="card-icon">
+        <i class="fas fa-drumstick-bite"></i>
+    </div>
+    <div class="card-content">
+        <div>
+            <div class="card-name">Meats</div>
+            <div class="card-details">{{ items|selectattr('product_name', 'match', '.*[Cc]hicken.*|.*[Bb]eef.*|.*[Pp]ork.*|.*[Ff]ish.*')|list|length }} items</div>
+        </div>
+    </div>
+</div>
+
+<div class="item-card teal">
+    <div class="card-icon">
+        <i class="fas fa-cheese"></i>
+    </div>
+    <div class="card-content">
+        <div>
+            <div class="card-name">Dairy</div>
+            <div class="card-details">{{ items|selectattr('product_name', 'match', '.*[Mm]ilk.*|.*[Cc]heese.*|.*[Yy]ogurt.*|.*[Bb]utter.*')|list|length }} items</div>
+        </div>
+    </div>
+</div>
+
+<div class="item-card lime">
+    <div class="card-icon">
+        <i class="fas fa-bread-slice"></i>
+    </div>
+    <div class="card-content">
+        <div>
+            <div class="card-name">Bakery</div>
+            <div class="card-details">{{ items|selectattr('product_name', 'match', '.*[Bb]read.*|.*[Cc]ake.*|.*[Mm]uffin.*|.*[Pp]astry.*')|list|length }} items</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="section-header" style="margin-top: 30px;">
+    <h2 class="section-title">Quick Stats:</h2>
+</div>
+
+<div class="item-card yellow">
+    <div class="card-icon">
+        <i class="fas fa-chart-bar"></i>
+    </div>
+    <div class="card-content">
+        <div>
+            <div class="card-name">Total Items</div>
+            <div class="card-details">{{ items|length }} items worth ${{ "%.2f"|format(items|sum(attribute='price')) }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="item-card pink">
+    <div class="card-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+    </div>
+    <div class="card-content">
+        <div>
+            <div class="card-name">Expiring Soon</div>
+            <div class="card-details">{{ items|selectattr('status', 'equalto', 'expiring_soon')|list|length }} items need attention</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

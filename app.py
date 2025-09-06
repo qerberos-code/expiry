@@ -29,6 +29,12 @@ migrate = Migrate(app, db)
 def index():
     """Main dashboard showing all items with expiration tracking"""
     items = Item.query.order_by(Item.expirationDate.asc().nulls_last()).all()
+    return render_template('mobile_index.html', items=items)
+
+@app.route('/desktop')
+def desktop_index():
+    """Desktop version of the dashboard"""
+    items = Item.query.order_by(Item.expirationDate.asc().nulls_last()).all()
     return render_template('index.html', items=items)
 
 @app.route('/add_item', methods=['GET', 'POST'])
@@ -64,9 +70,9 @@ def add_item():
         except Exception as e:
             db.session.rollback()
             flash(f'Error adding item: {str(e)}', 'error')
-            return render_template('add_item.html')
+            return render_template('mobile_add_item.html')
     
-    return render_template('add_item.html')
+    return render_template('mobile_add_item.html')
 
 @app.route('/edit_item/<int:item_id>', methods=['GET', 'POST'])
 def edit_item(item_id):
@@ -129,7 +135,19 @@ def expiring_soon():
         Item.expiration_date <= next_week
     ).order_by(Item.expiration_date.asc()).all()
     
-    return render_template('expiring_soon.html', items=items)
+    return render_template('mobile_items_list.html', items=items)
+
+@app.route('/items_list')
+def items_list():
+    """Show all items organized by category"""
+    items = Item.query.order_by(Item.expirationDate.asc().nulls_last()).all()
+    return render_template('mobile_items_list.html', items=items)
+
+@app.route('/receipt_details')
+def receipt_details():
+    """Show receipt details with items"""
+    items = Item.query.order_by(Item.purchase_date.desc()).all()
+    return render_template('mobile_receipt_details.html', items=items)
 
 @app.route('/analytics')
 def analytics():

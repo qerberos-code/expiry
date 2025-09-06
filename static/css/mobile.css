@@ -1,0 +1,523 @@
+/* Mobile-First Design for Expiry Tracker */
+/* Matching the attached mobile app design */
+
+:root {
+    /* Color Palette from the design */
+    --bg-light-green: #E8F5E8;
+    --header-dark-green: #2D5016;
+    --accent-yellow-green: #B8D4A3;
+    --text-dark-green: #2D5016;
+    --text-light-gray: #8B8B8B;
+    --white: #FFFFFF;
+    
+    /* Pastel colors for cards */
+    --pastel-orange: #FFB366;
+    --pastel-pink: #FFB3D1;
+    --pastel-teal: #66B3B3;
+    --pastel-lime: #B3FF66;
+    --pastel-yellow: #FFFFB3;
+    
+    /* Card colors */
+    --card-orange: #FFB366;
+    --card-pink: #FFB3D1;
+    --card-teal: #66B3B3;
+    --card-lime: #B3FF66;
+    --card-yellow: #FFFFB3;
+}
+
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg-light-green);
+    color: var(--text-dark-green);
+    line-height: 1.4;
+    overflow-x: hidden;
+}
+
+/* Mobile-first container */
+.mobile-container {
+    max-width: 375px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background-color: var(--bg-light-green);
+    position: relative;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+/* Header */
+.mobile-header {
+    background-color: var(--header-dark-green);
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.hamburger-menu {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.hamburger-menu span {
+    width: 100%;
+    height: 3px;
+    background-color: var(--white);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.header-title {
+    color: var(--accent-yellow-green);
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    flex: 1;
+}
+
+.header-title .greeting {
+    color: var(--header-dark-green);
+}
+
+/* Main content area */
+.mobile-content {
+    padding: 20px;
+    padding-bottom: 100px; /* Space for floating button */
+    min-height: calc(100vh - 140px);
+}
+
+/* Section headers */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.section-title {
+    color: var(--text-dark-green);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.see-all-link {
+    color: var(--text-light-gray);
+    font-size: 14px;
+    text-decoration: none;
+}
+
+/* Cards */
+.item-card {
+    background-color: var(--white);
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+}
+
+.item-card:hover {
+    transform: translateY(-2px);
+}
+
+.item-card.orange { background-color: var(--card-orange); }
+.item-card.pink { background-color: var(--card-pink); }
+.item-card.teal { background-color: var(--card-teal); }
+.item-card.lime { background-color: var(--card-lime); }
+.item-card.yellow { background-color: var(--card-yellow); }
+
+.card-icon {
+    width: 40px;
+    height: 40px;
+    background-color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    font-size: 18px;
+    color: var(--text-dark-green);
+}
+
+.card-content {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-name {
+    font-weight: 500;
+    color: var(--text-dark-green);
+}
+
+.card-details {
+    color: var(--text-light-gray);
+    font-size: 14px;
+}
+
+.card-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    color: var(--text-dark-green);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.action-btn:hover {
+    background-color: rgba(45, 80, 22, 0.1);
+}
+
+/* Receipt details specific */
+.receipt-image {
+    width: 100%;
+    height: 200px;
+    background-color: #F5F5F5;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-light-gray);
+    margin-bottom: 20px;
+    border: 2px dashed #DDD;
+}
+
+/* Category sections */
+.category-section {
+    margin-bottom: 25px;
+}
+
+.category-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Floating action button */
+.floating-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 60px;
+    background-color: var(--accent-yellow-green);
+    border: 3px solid var(--header-dark-green);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.floating-btn:hover {
+    transform: translateX(-50%) scale(1.1);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+
+.floating-btn i {
+    color: var(--header-dark-green);
+    font-size: 24px;
+}
+
+/* Bottom action bar */
+.bottom-actions {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 375px;
+    background-color: var(--header-dark-green);
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bottom-btn {
+    background: none;
+    border: none;
+    color: var(--text-light-gray);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 8px;
+    transition: color 0.2s ease;
+}
+
+.bottom-btn.primary {
+    color: var(--accent-yellow-green);
+    font-weight: 600;
+}
+
+.bottom-btn:hover {
+    color: var(--white);
+}
+
+/* Status badges */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-left: 10px;
+}
+
+.status-badge.expired {
+    background-color: #FFE6E6;
+    color: #D32F2F;
+}
+
+.status-badge.expiring-soon {
+    background-color: #FFF3E0;
+    color: #F57C00;
+}
+
+.status-badge.fresh {
+    background-color: #E8F5E8;
+    color: #2D5016;
+}
+
+/* Form elements */
+.mobile-form {
+    background-color: var(--white);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    color: var(--text-dark-green);
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 16px;
+    background-color: var(--white);
+    transition: border-color 0.2s ease;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--header-dark-green);
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+    .mobile-container {
+        max-width: 100%;
+        box-shadow: none;
+    }
+    
+    .mobile-content {
+        padding: 40px;
+        padding-bottom: 120px;
+    }
+    
+    .floating-btn {
+        position: relative;
+        bottom: auto;
+        left: auto;
+        transform: none;
+        margin: 20px auto;
+    }
+}
+
+/* Animation for card colors */
+@keyframes cardColorCycle {
+    0% { background-color: var(--card-orange); }
+    20% { background-color: var(--card-pink); }
+    40% { background-color: var(--card-teal); }
+    60% { background-color: var(--card-lime); }
+    80% { background-color: var(--card-yellow); }
+    100% { background-color: var(--card-orange); }
+}
+
+.item-card.animated {
+    animation: cardColorCycle 3s ease-in-out infinite;
+}
+
+/* Mobile Menu */
+.mobile-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.mobile-menu-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.mobile-menu-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100%;
+    background-color: var(--white);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+}
+
+.mobile-menu-overlay.active .mobile-menu-content {
+    transform: translateX(0);
+}
+
+.menu-header {
+    background-color: var(--header-dark-green);
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.menu-header h3 {
+    color: var(--accent-yellow-green);
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.close-menu {
+    background: none;
+    border: none;
+    color: var(--accent-yellow-green);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.menu-nav {
+    padding: 20px 0;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    color: var(--text-dark-green);
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.menu-item:hover {
+    background-color: var(--bg-light-green);
+}
+
+.menu-item i {
+    width: 24px;
+    margin-right: 15px;
+    font-size: 18px;
+}
+
+/* Flash Messages */
+.mobile-flash-messages {
+    position: fixed;
+    top: 80px;
+    left: 20px;
+    right: 20px;
+    z-index: 1001;
+    max-width: 335px;
+    margin: 0 auto;
+}
+
+.flash-message {
+    background-color: var(--white);
+    border-radius: 8px;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    animation: slideDown 0.3s ease;
+}
+
+.flash-message.flash-success {
+    border-left: 4px solid #4CAF50;
+}
+
+.flash-message.flash-error {
+    border-left: 4px solid #F44336;
+}
+
+.flash-message.flash-warning {
+    border-left: 4px solid #FF9800;
+}
+
+.flash-close {
+    background: none;
+    border: none;
+    color: var(--text-light-gray);
+    cursor: pointer;
+    padding: 5px;
+    margin-left: 10px;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Loading states */
+.loading-card {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
