@@ -1,8 +1,9 @@
-# Expiry Tracker - Minimal Dependencies for Render.com
+# Expiry Tracker - Dependencies for Render.com
 # Web framework
 flask>=2.3.0
 flask-sqlalchemy>=3.0.0
 flask-migrate>=4.0.0
+gunicorn>=21.0.0
 
 # Database connectivity
 sqlalchemy>=2.0.0
